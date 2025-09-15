@@ -66,6 +66,22 @@
             color: #28a745;
         }
         
+        .timer-warning {
+            color: #ff9800 !important;
+            animation: pulse 1s infinite;
+        }
+        
+        .timer-danger {
+            color: #f44336 !important;
+            animation: pulse 0.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
         .game-area {
             padding: 30px;
         }
@@ -271,6 +287,157 @@
             height: 100%;
             transition: width 0.5s ease;
         }
+        
+        .frogger-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .frogger-game {
+            background: #87CEEB;
+            width: 600px;
+            height: 500px;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            border: 5px solid #4169E1;
+        }
+        
+        .frogger-header {
+            background: #4169E1;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .frogger-road {
+            position: absolute;
+            width: 100%;
+            height: 60px;
+            background: #333;
+            border-top: 3px solid #fff;
+            border-bottom: 3px solid #fff;
+        }
+        
+        .road1 { top: 120px; }
+        .road2 { top: 200px; }
+        .road3 { top: 280px; }
+        
+        .frogger-safe-zone {
+            position: absolute;
+            width: 100%;
+            height: 60px;
+            background: #90EE90;
+        }
+        
+        .safe1 { top: 60px; }
+        .safe2 { top: 180px; }
+        .safe3 { top: 260px; }
+        .safe4 { top: 340px; }
+        .finish-zone { top: 400px; background: #FFD700; }
+        
+        .frog {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #228B22;
+            border-radius: 50%;
+            left: 285px;
+            bottom: 20px;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        
+        .frog::before {
+            content: '🐸';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            font-size: 25px;
+        }
+        
+        .car {
+            position: absolute;
+            width: 40px;
+            height: 25px;
+            border-radius: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .car1 { background: #FF4500; }
+        .car2 { background: #1E90FF; }
+        .car3 { background: #FF1493; }
+        
+        .frogger-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(2, 50px);
+            gap: 5px;
+        }
+        
+        .frogger-btn {
+            background: #4CAF50;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .frogger-btn:hover {
+            background: #45a049;
+            transform: scale(1.1);
+        }
+        
+        .btn-up { grid-column: 2; grid-row: 1; }
+        .btn-left { grid-column: 1; grid-row: 2; }
+        .btn-down { grid-column: 2; grid-row: 2; }
+        .btn-right { grid-column: 3; grid-row: 2; }
+        
+        .frogger-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: none;
+            z-index: 20;
+        }
+        
+        .close-frogger {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
@@ -293,6 +460,10 @@
             <div class="score-item">
                 <div>Streak</div>
                 <div class="score-number" id="streak">0</div>
+            </div>
+            <div class="score-item">
+                <div>Time Left</div>
+                <div class="score-number" id="timer">30</div>
             </div>
         </div>
         
@@ -329,8 +500,42 @@
         </div>
     </div>
 
+    <!-- Frogger Mini Game -->
+    <div class="frogger-overlay" id="froggerOverlay">
+        <div class="frogger-game" id="froggerGame">
+            <button class="close-frogger" onclick="closeFrogger()">×</button>
+            <div class="frogger-header">🏆 BONUS FROGGER GAME! 🏆</div>
+            
+            <!-- Safe zones -->
+            <div class="frogger-safe-zone safe1"></div>
+            <div class="frogger-safe-zone safe2"></div>
+            <div class="frogger-safe-zone safe3"></div>
+            <div class="frogger-safe-zone safe4"></div>
+            <div class="frogger-safe-zone finish-zone"></div>
+            
+            <!-- Roads -->
+            <div class="frogger-road road1" id="road1"></div>
+            <div class="frogger-road road2" id="road2"></div>
+            <div class="frogger-road road3" id="road3"></div>
+            
+            <!-- Frog -->
+            <div class="frog" id="frog"></div>
+            
+            <!-- Controls -->
+            <div class="frogger-controls">
+                <button class="frogger-btn btn-up" onclick="moveFrog('up')">↑</button>
+                <button class="frogger-btn btn-left" onclick="moveFrog('left')">←</button>
+                <button class="frogger-btn btn-down" onclick="moveFrog('down')">↓</button>
+                <button class="frogger-btn btn-right" onclick="moveFrog('right')">→</button>
+            </div>
+            
+            <!-- Game message -->
+            <div class="frogger-message" id="froggerMessage"></div>
+        </div>
+    </div>
+
     <script>
-        const sentences = [
+        const allSentences = [
             {
                 text: "The happy dog ran quickly through the green park.",
                 keywords: ["dog", "ran", "park"],
@@ -370,14 +575,378 @@
                 text: "Five hungry birds sang beautiful songs in the tall tree.",
                 keywords: ["birds", "sang", "tree"],
                 explanation: "Perfect! 'Birds' tells WHO, 'sang' tells WHAT they did, and 'tree' tells WHERE!"
+            },
+            {
+                text: "The cat climbed up the wooden fence during the storm.",
+                keywords: ["cat", "climbed", "fence"],
+                explanation: "Excellent! 'Cat' is WHO, 'climbed' is WHAT it did, and 'fence' is WHERE!"
+            },
+            {
+                text: "Dad fixed the broken bicycle in the garage this morning.",
+                keywords: ["Dad", "fixed", "bicycle"],
+                explanation: "Great! 'Dad' is WHO, 'fixed' is WHAT he did, and 'bicycle' is WHAT he fixed!"
+            },
+            {
+                text: "The children played soccer on the muddy field after school.",
+                keywords: ["children", "played", "soccer"],
+                explanation: "Perfect! 'Children' is WHO, 'played' is WHAT they did, and 'soccer' is WHAT they played!"
+            },
+            {
+                text: "A tiny mouse hid under the old wooden table.",
+                keywords: ["mouse", "hid", "table"],
+                explanation: "Awesome! 'Mouse' is WHO, 'hid' is WHAT it did, and 'table' is WHERE!"
+            },
+            {
+                text: "The teacher read an exciting story to the whole class.",
+                keywords: ["teacher", "read", "story"],
+                explanation: "Excellent! 'Teacher' is WHO, 'read' is WHAT she did, and 'story' is WHAT she read!"
+            },
+            {
+                text: "My grandmother grows beautiful roses in her backyard garden.",
+                keywords: ["grandmother", "grows", "roses"],
+                explanation: "Super! 'Grandmother' is WHO, 'grows' is WHAT she does, and 'roses' is WHAT she grows!"
+            },
+            {
+                text: "The mailman delivered packages to every house on Monday.",
+                keywords: ["mailman", "delivered", "packages"],
+                explanation: "Great! 'Mailman' is WHO, 'delivered' is WHAT he did, and 'packages' is WHAT he delivered!"
+            },
+            {
+                text: "Three dolphins jumped high above the sparkling ocean waves.",
+                keywords: ["dolphins", "jumped", "ocean"],
+                explanation: "Amazing! 'Dolphins' is WHO, 'jumped' is WHAT they did, and 'ocean' is WHERE!"
+            },
+            {
+                text: "The baker made fresh bread early in the morning.",
+                keywords: ["baker", "made", "bread"],
+                explanation: "Perfect! 'Baker' is WHO, 'made' is WHAT he did, and 'bread' is WHAT he made!"
+            },
+            {
+                text: "A colorful butterfly landed gently on the pink flower.",
+                keywords: ["butterfly", "landed", "flower"],
+                explanation: "Wonderful! 'Butterfly' is WHO, 'landed' is WHAT it did, and 'flower' is WHERE!"
+            },
+            {
+                text: "The astronaut floated weightlessly inside the space station.",
+                keywords: ["astronaut", "floated", "station"],
+                explanation: "Fantastic! 'Astronaut' is WHO, 'floated' is WHAT he did, and 'station' is WHERE!"
+            },
+            {
+                text: "My cousin caught five fish at the quiet lake yesterday.",
+                keywords: ["cousin", "caught", "fish"],
+                explanation: "Excellent! 'Cousin' is WHO, 'caught' is WHAT he did, and 'fish' is WHAT he caught!"
+            },
+            {
+                text: "The librarian organized hundreds of books on the tall shelves.",
+                keywords: ["librarian", "organized", "books"],
+                explanation: "Great! 'Librarian' is WHO, 'organized' is WHAT she did, and 'books' is WHAT she organized!"
+            },
+            {
+                text: "A friendly robot helped customers at the busy store.",
+                keywords: ["robot", "helped", "customers"],
+                explanation: "Super! 'Robot' is WHO, 'helped' is WHAT it did, and 'customers' is WHO it helped!"
+            },
+            {
+                text: "The pilot flew the airplane through the fluffy white clouds.",
+                keywords: ["pilot", "flew", "airplane"],
+                explanation: "Amazing! 'Pilot' is WHO, 'flew' is WHAT he did, and 'airplane' is WHAT he flew!"
+            },
+            {
+                text: "Six penguins slid down the icy hill near the frozen pond.",
+                keywords: ["penguins", "slid", "hill"],
+                explanation: "Perfect! 'Penguins' is WHO, 'slid' is WHAT they did, and 'hill' is WHERE!"
+            },
+            {
+                text: "The dentist cleaned my teeth with special tools today.",
+                keywords: ["dentist", "cleaned", "teeth"],
+                explanation: "Excellent! 'Dentist' is WHO, 'cleaned' is WHAT she did, and 'teeth' is WHAT she cleaned!"
+            },
+            {
+                text: "A hungry bear searched for honey in the deep forest.",
+                keywords: ["bear", "searched", "honey"],
+                explanation: "Great! 'Bear' is WHO, 'searched' is WHAT it did, and 'honey' is WHAT it searched for!"
+            },
+            {
+                text: "The mechanic repaired the broken car in his workshop.",
+                keywords: ["mechanic", "repaired", "car"],
+                explanation: "Super! 'Mechanic' is WHO, 'repaired' is WHAT he did, and 'car' is WHAT he repaired!"
+            },
+            {
+                text: "Two eagles soared high above the rocky mountain peaks.",
+                keywords: ["eagles", "soared", "mountain"],
+                explanation: "Wonderful! 'Eagles' is WHO, 'soared' is WHAT they did, and 'mountain' is WHERE!"
+            },
+            {
+                text: "The chef cooked delicious pasta for the hungry customers.",
+                keywords: ["chef", "cooked", "pasta"],
+                explanation: "Fantastic! 'Chef' is WHO, 'cooked' is WHAT he did, and 'pasta' is WHAT he cooked!"
+            },
+            {
+                text: "A small turtle crawled slowly across the sandy beach.",
+                keywords: ["turtle", "crawled", "beach"],
+                explanation: "Perfect! 'Turtle' is WHO, 'crawled' is WHAT it did, and 'beach' is WHERE!"
+            },
+            {
+                text: "The farmer planted corn seeds in the rich brown soil.",
+                keywords: ["farmer", "planted", "seeds"],
+                explanation: "Excellent! 'Farmer' is WHO, 'planted' is WHAT he did, and 'seeds' is WHAT he planted!"
+            },
+            {
+                text: "My brother built a treehouse in the old oak tree.",
+                keywords: ["brother", "built", "treehouse"],
+                explanation: "Great! 'Brother' is WHO, 'built' is WHAT he did, and 'treehouse' is WHAT he built!"
+            },
+            {
+                text: "The musician played beautiful music on her golden violin.",
+                keywords: ["musician", "played", "music"],
+                explanation: "Amazing! 'Musician' is WHO, 'played' is WHAT she did, and 'music' is WHAT she played!"
+            },
+            {
+                text: "A playful monkey swung from branch to branch in the jungle.",
+                keywords: ["monkey", "swung", "jungle"],
+                explanation: "Super! 'Monkey' is WHO, 'swung' is WHAT it did, and 'jungle' is WHERE!"
+            },
+            {
+                text: "The artist painted a colorful picture of the sunset.",
+                keywords: ["artist", "painted", "picture"],
+                explanation: "Wonderful! 'Artist' is WHO, 'painted' is WHAT she did, and 'picture' is WHAT she painted!"
+            },
+            {
+                text: "Seven horses galloped quickly across the green meadow.",
+                keywords: ["horses", "galloped", "meadow"],
+                explanation: "Fantastic! 'Horses' is WHO, 'galloped' is WHAT they did, and 'meadow' is WHERE!"
+            },
+            {
+                text: "The scientist discovered a new species of butterfly yesterday.",
+                keywords: ["scientist", "discovered", "species"],
+                explanation: "Excellent! 'Scientist' is WHO, 'discovered' is WHAT she did, and 'species' is WHAT she discovered!"
+            },
+            {
+                text: "A curious squirrel collected acorns for the long winter.",
+                keywords: ["squirrel", "collected", "acorns"],
+                explanation: "Perfect! 'Squirrel' is WHO, 'collected' is WHAT it did, and 'acorns' is WHAT it collected!"
+            },
+            {
+                text: "The photographer took amazing pictures of the wild animals.",
+                keywords: ["photographer", "took", "pictures"],
+                explanation: "Great! 'Photographer' is WHO, 'took' is WHAT he did, and 'pictures' is WHAT he took!"
+            },
+            {
+                text: "Four rabbits hopped quickly through the tall grass field.",
+                keywords: ["rabbits", "hopped", "field"],
+                explanation: "Super! 'Rabbits' is WHO, 'hopped' is WHAT they did, and 'field' is WHERE!"
+            },
+            {
+                text: "The gardener watered all the plants in the greenhouse.",
+                keywords: ["gardener", "watered", "plants"],
+                explanation: "Amazing! 'Gardener' is WHO, 'watered' is WHAT she did, and 'plants' is WHAT she watered!"
+            },
+            {
+                text: "A wise owl hooted softly from the tall pine tree.",
+                keywords: ["owl", "hooted", "tree"],
+                explanation: "Excellent! 'Owl' is WHO, 'hooted' is WHAT it did, and 'tree' is WHERE!"
+            },
+            {
+                text: "The construction worker built a new bridge over the river.",
+                keywords: ["worker", "built", "bridge"],
+                explanation: "Fantastic! 'Worker' is WHO, 'built' is WHAT he did, and 'bridge' is WHAT he built!"
+            },
+            {
+                text: "Eight fish swam gracefully in the crystal clear pond.",
+                keywords: ["fish", "swam", "pond"],
+                explanation: "Perfect! 'Fish' is WHO, 'swam' is WHAT they did, and 'pond' is WHERE!"
+            },
+            {
+                text: "The veterinarian examined the sick puppy very carefully.",
+                keywords: ["veterinarian", "examined", "puppy"],
+                explanation: "Great! 'Veterinarian' is WHO, 'examined' is WHAT she did, and 'puppy' is WHO she examined!"
+            },
+            {
+                text: "A giant whale splashed water high into the blue sky.",
+                keywords: ["whale", "splashed", "water"],
+                explanation: "Wonderful! 'Whale' is WHO, 'splashed' is WHAT it did, and 'water' is WHAT it splashed!"
+            },
+            {
+                text: "The firefighter rescued a cat from the burning building.",
+                keywords: ["firefighter", "rescued", "cat"],
+                explanation: "Super! 'Firefighter' is WHO, 'rescued' is WHAT he did, and 'cat' is WHO he rescued!"
+            },
+            {
+                text: "Nine bees buzzed busily around the colorful flower garden.",
+                keywords: ["bees", "buzzed", "garden"],
+                explanation: "Amazing! 'Bees' is WHO, 'buzzed' is WHAT they did, and 'garden' is WHERE!"
+            },
+            {
+                text: "The magician performed incredible tricks for the amazed audience.",
+                keywords: ["magician", "performed", "tricks"],
+                explanation: "Fantastic! 'Magician' is WHO, 'performed' is WHAT he did, and 'tricks' is WHAT he performed!"
+            },
+            {
+                text: "A sleepy koala climbed slowly up the eucalyptus tree.",
+                keywords: ["koala", "climbed", "tree"],
+                explanation: "Excellent! 'Koala' is WHO, 'climbed' is WHAT it did, and 'tree' is WHERE!"
+            },
+            {
+                text: "The janitor cleaned every classroom in the big school.",
+                keywords: ["janitor", "cleaned", "classroom"],
+                explanation: "Perfect! 'Janitor' is WHO, 'cleaned' is WHAT he did, and 'classroom' is WHAT he cleaned!"
+            },
+            {
+                text: "Twelve ants carried food back to their underground home.",
+                keywords: ["ants", "carried", "food"],
+                explanation: "Great! 'Ants' is WHO, 'carried' is WHAT they did, and 'food' is WHAT they carried!"
+            },
+            {
+                text: "The sailor navigated his boat through the stormy ocean.",
+                keywords: ["sailor", "navigated", "boat"],
+                explanation: "Super! 'Sailor' is WHO, 'navigated' is WHAT he did, and 'boat' is WHAT he navigated!"
+            },
+            {
+                text: "A graceful swan glided smoothly across the peaceful lake.",
+                keywords: ["swan", "glided", "lake"],
+                explanation: "Wonderful! 'Swan' is WHO, 'glided' is WHAT it did, and 'lake' is WHERE!"
+            },
+            {
+                text: "The electrician fixed the broken lights in our house.",
+                keywords: ["electrician", "fixed", "lights"],
+                explanation: "Amazing! 'Electrician' is WHO, 'fixed' is WHAT he did, and 'lights' is WHAT he fixed!"
+            },
+            {
+                text: "Fifteen butterflies danced together in the sunny meadow.",
+                keywords: ["butterflies", "danced", "meadow"],
+                explanation: "Fantastic! 'Butterflies' is WHO, 'danced' is WHAT they did, and 'meadow' is WHERE!"
+            },
+            {
+                text: "The archaeologist discovered ancient treasures buried in the sand.",
+                keywords: ["archaeologist", "discovered", "treasures"],
+                explanation: "Excellent! 'Archaeologist' is WHO, 'discovered' is WHAT she did, and 'treasures' is WHAT she discovered!"
+            },
+            {
+                text: "A powerful lion roared loudly in the African savanna.",
+                keywords: ["lion", "roared", "savanna"],
+                explanation: "Perfect! 'Lion' is WHO, 'roared' is WHAT it did, and 'savanna' is WHERE!"
+            },
+            {
+                text: "The plumber repaired the leaky pipes under the kitchen sink.",
+                keywords: ["plumber", "repaired", "pipes"],
+                explanation: "Great! 'Plumber' is WHO, 'repaired' is WHAT he did, and 'pipes' is WHAT he repaired!"
+            },
+            {
+                text: "Twenty fireflies glowed brightly in the dark summer night.",
+                keywords: ["fireflies", "glowed", "night"],
+                explanation: "Super! 'Fireflies' is WHO, 'glowed' is WHAT they did, and 'night' is WHEN!"
+            },
+            {
+                text: "The zookeeper fed fresh fruit to the hungry elephants.",
+                keywords: ["zookeeper", "fed", "elephants"],
+                explanation: "Amazing! 'Zookeeper' is WHO, 'fed' is WHAT she did, and 'elephants' is WHO she fed!"
+            },
+            {
+                text: "A clever octopus hid behind the colorful coral reef.",
+                keywords: ["octopus", "hid", "reef"],
+                explanation: "Wonderful! 'Octopus' is WHO, 'hid' is WHAT it did, and 'reef' is WHERE!"
             }
         ];
+
+        let sentences = [];
+        let sentencePool = [];
 
         let currentSentence = 0;
         let selectedWords = [];
         let score = 0;
         let streak = 0;
         let level = 1;
+        let timeLeft = 30;
+        let timerInterval = null;
+        let gameActive = true;
+
+        // Initialize random sentence pool
+        function initializeSentencePool() {
+            // Create a shuffled copy of all sentences
+            sentencePool = [...allSentences];
+            shuffleArray(sentencePool);
+            sentences = sentencePool.slice(0, 20); // Start with 20 random sentences
+            currentSentence = 0;
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function getNextSentence() {
+            currentSentence++;
+            
+            // If we've used all sentences in current pool, add more random ones
+            if (currentSentence >= sentences.length) {
+                // Remove used sentences from pool
+                sentencePool = sentencePool.slice(sentences.length);
+                
+                // If pool is getting low, refill with all sentences
+                if (sentencePool.length < 10) {
+                    sentencePool = [...allSentences];
+                    shuffleArray(sentencePool);
+                }
+                
+                // Add 10 more random sentences
+                const newSentences = sentencePool.slice(0, 10);
+                sentences = sentences.concat(newSentences);
+            }
+        }
+
+        function startTimer() {
+            timeLeft = 30;
+            gameActive = true;
+            updateTimerDisplay();
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timeUp();
+                }
+            }, 1000);
+        }
+        
+        function updateTimerDisplay() {
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = timeLeft;
+            
+            // Remove previous classes
+            timerElement.classList.remove('timer-warning', 'timer-danger');
+            
+            // Add warning colors based on time left
+            if (timeLeft <= 5) {
+                timerElement.classList.add('timer-danger');
+            } else if (timeLeft <= 10) {
+                timerElement.classList.add('timer-warning');
+            }
+        }
+        
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            gameActive = false;
+        }
+        
+        function timeUp() {
+            gameActive = false;
+            streak = 0;
+            const correctWords = sentences[currentSentence].keywords.join(', ');
+            showFeedback(`⏰ Time's up! The key words were: ${correctWords}. Try to be faster next time!`, "error");
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            updateScoreBoard();
+        }
 
         function displaySentence() {
             const sentence = sentences[currentSentence];
@@ -406,9 +975,14 @@
             });
             
             updateProgress();
+            startTimer();
         }
 
         function selectWord(word, element) {
+            if (!gameActive) {
+                return; // Don't allow selection if game is not active
+            }
+            
             if (selectedWords.length >= 3 && !selectedWords.includes(word)) {
                 showFeedback("You can only select 3 keywords! Clear your selection to choose different words.", "error");
                 return;
@@ -450,10 +1024,16 @@
         }
 
         function checkAnswer() {
+            if (!gameActive) {
+                return; // Don't allow checking if game is not active
+            }
+            
             if (selectedWords.length !== 3) {
                 showFeedback("Please select exactly 3 keywords before checking your answer!", "error");
                 return;
             }
+            
+            stopTimer(); // Stop the timer when answer is checked
             
             const correctKeywords = sentences[currentSentence].keywords;
             const isCorrect = selectedWords.every(word => 
@@ -475,15 +1055,24 @@
             });
             
             if (isCorrect) {
-                score += 100 + (streak * 10);
+                // Bonus points for time remaining
+                const timeBonus = timeLeft * 2;
+                score += 100 + (streak * 10) + timeBonus;
                 streak++;
-                showFeedback(sentences[currentSentence].explanation + " 🎉", "success");
+                showFeedback(sentences[currentSentence].explanation + ` 🎉 Time bonus: +${timeBonus} points!`, "success");
                 showCelebration();
                 document.getElementById('nextBtn').style.display = 'inline-block';
                 
                 if (streak > 0 && streak % 3 === 0) {
                     level++;
                     showFeedback(`🎊 Level Up! You're now a Level ${level} Keyword Detective! 🎊`, "success");
+                }
+                
+                // Check for Frogger bonus game
+                if (streak === 5) {
+                    setTimeout(() => {
+                        startFroggerGame();
+                    }, 2000);
                 }
             } else {
                 streak = 0;
@@ -496,7 +1085,7 @@
         }
 
         function nextSentence() {
-            currentSentence = (currentSentence + 1) % sentences.length;
+            getNextSentence();
             clearSelection();
             displaySentence();
             document.getElementById('nextBtn').style.display = 'none';
@@ -529,13 +1118,194 @@
         }
 
         function updateProgress() {
-            const progress = ((currentSentence + 1) / sentences.length) * 100;
+            // Show progress as a continuous journey rather than completion percentage
+            const progress = Math.min(((currentSentence + 1) / 20) * 100, 100);
             document.getElementById('progressFill').style.width = progress + '%';
         }
 
+        // Frogger Game Variables
+        let frogX = 285;
+        let frogY = 460;
+        let cars = [];
+        let froggerActive = false;
+        let froggerInterval = null;
+        
+        function startFroggerGame() {
+            froggerActive = true;
+            document.getElementById('froggerOverlay').style.display = 'flex';
+            resetFrog();
+            createCars();
+            startCarMovement();
+            showFroggerMessage("🎉 BONUS ROUND! Get the frog to the golden zone! 🐸", 3000);
+        }
+        
+        function resetFrog() {
+            frogX = 285;
+            frogY = 460;
+            updateFrogPosition();
+        }
+        
+        function updateFrogPosition() {
+            const frog = document.getElementById('frog');
+            frog.style.left = frogX + 'px';
+            frog.style.bottom = (500 - frogY - 30) + 'px';
+        }
+        
+        function createCars() {
+            cars = [];
+            const roads = ['road1', 'road2', 'road3'];
+            
+            roads.forEach((roadId, index) => {
+                const road = document.getElementById(roadId);
+                road.innerHTML = ''; // Clear existing cars
+                
+                // Create 2-3 cars per road
+                for (let i = 0; i < 3; i++) {
+                    const car = document.createElement('div');
+                    car.className = `car car${index + 1}`;
+                    
+                    const carData = {
+                        element: car,
+                        x: -100 - (i * 200),
+                        road: index,
+                        speed: 2 + index
+                    };
+                    
+                    cars.push(carData);
+                    road.appendChild(car);
+                }
+            });
+        }
+        
+        function startCarMovement() {
+            if (froggerInterval) clearInterval(froggerInterval);
+            
+            froggerInterval = setInterval(() => {
+                if (!froggerActive) return;
+                
+                cars.forEach(car => {
+                    car.x += car.speed;
+                    if (car.x > 650) {
+                        car.x = -100;
+                    }
+                    car.element.style.left = car.x + 'px';
+                    
+                    // Check collision
+                    checkCollision(car);
+                });
+            }, 50);
+        }
+        
+        function checkCollision(car) {
+            const carLeft = car.x;
+            const carRight = car.x + 40;
+            const carTop = 120 + (car.road * 80);
+            const carBottom = carTop + 60;
+            
+            const frogLeft = frogX;
+            const frogRight = frogX + 30;
+            const frogTop = frogY;
+            const frogBottom = frogY + 30;
+            
+            if (frogLeft < carRight && frogRight > carLeft && 
+                frogTop < carBottom && frogBottom > carTop) {
+                // Collision detected!
+                froggerGameOver(false);
+            }
+        }
+        
+        function moveFrog(direction) {
+            if (!froggerActive) return;
+            
+            const step = 40;
+            
+            switch(direction) {
+                case 'up':
+                    if (frogY > 60) frogY -= step;
+                    break;
+                case 'down':
+                    if (frogY < 460) frogY += step;
+                    break;
+                case 'left':
+                    if (frogX > 10) frogX -= step;
+                    break;
+                case 'right':
+                    if (frogX < 560) frogX += step;
+                    break;
+            }
+            
+            updateFrogPosition();
+            
+            // Check if reached finish zone
+            if (frogY <= 100) {
+                froggerGameOver(true);
+            }
+        }
+        
+        function froggerGameOver(won) {
+            froggerActive = false;
+            clearInterval(froggerInterval);
+            
+            if (won) {
+                score += 500; // Bonus points for completing Frogger
+                showFroggerMessage("🎉 Amazing! You won the bonus game! +500 points! 🏆", 3000);
+                updateScoreBoard();
+            } else {
+                showFroggerMessage("💥 Oops! The frog got hit! Better luck next time! 🐸", 3000);
+            }
+            
+            setTimeout(() => {
+                closeFrogger();
+            }, 3000);
+        }
+        
+        function showFroggerMessage(message, duration) {
+            const messageDiv = document.getElementById('froggerMessage');
+            messageDiv.textContent = message;
+            messageDiv.style.display = 'block';
+            
+            if (duration) {
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, duration);
+            }
+        }
+        
+        function closeFrogger() {
+            froggerActive = false;
+            clearInterval(froggerInterval);
+            document.getElementById('froggerOverlay').style.display = 'none';
+            document.getElementById('froggerMessage').style.display = 'none';
+        }
+        
+        // Add keyboard controls for Frogger
+        document.addEventListener('keydown', (e) => {
+            if (!froggerActive) return;
+            
+            switch(e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    moveFrog('up');
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    moveFrog('down');
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    moveFrog('left');
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    moveFrog('right');
+                    break;
+            }
+        });
+
         // Initialize the game
+        initializeSentencePool();
         displaySentence();
         updateScoreBoard();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97f9e37586cd41c4',t:'MTc1Nzk1NzgwOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97fa052370bb4533',t:'MTc1Nzk1OTE4OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
