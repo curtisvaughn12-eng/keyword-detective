@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyword Detective Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Comic Neue', cursive;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .detective-badge {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            background: #f8f9fa;
+            padding: 15px;
+            border-bottom: 3px solid #e9ecef;
+        }
+        
+        .score-item {
+            text-align: center;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .score-number {
+            font-size: 1.5rem;
+            color: #28a745;
+        }
+        
+        .game-area {
+            padding: 30px;
+        }
+        
+        .instructions {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border-left: 5px solid #2196f3;
+        }
+        
+        .sentence-display {
+            background: #fff3e0;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 3px solid #ff9800;
+            text-align: center;
+        }
+        
+        .sentence-text {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .word {
+            display: inline-block;
+            margin: 3px;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .word:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            transform: translateY(-2px);
+        }
+        
+        .word.selected {
+            background: #4caf50;
+            color: white;
+            border-color: #388e3c;
+            transform: scale(1.05);
+        }
+        
+        .word.correct {
+            background: #4caf50;
+            color: white;
+            animation: bounce 0.6s ease;
+        }
+        
+        .word.incorrect {
+            background: #f44336;
+            color: white;
+            animation: shake 0.6s ease;
+        }
+        
+        .selected-keywords {
+            background: #f3e5f5;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 3px solid #9c27b0;
+        }
+        
+        .selected-keywords h3 {
+            color: #7b1fa2;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .keyword-slots {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .keyword-slot {
+            width: 120px;
+            height: 50px;
+            border: 3px dashed #9c27b0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            font-weight: bold;
+            color: #7b1fa2;
+        }
+        
+        .keyword-slot.filled {
+            background: #9c27b0;
+            color: white;
+            border-style: solid;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Comic Neue', cursive;
+        }
+        
+        .btn-check {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .btn-check:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .btn-clear {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .btn-clear:hover {
+            background: #f57c00;
+            transform: translateY(-2px);
+        }
+        
+        .btn-next {
+            background: #2196f3;
+            color: white;
+        }
+        
+        .btn-next:hover {
+            background: #1976d2;
+            transform: translateY(-2px);
+        }
+        
+        .feedback {
+            text-align: center;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .feedback.success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .feedback.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .celebration {
+            text-align: center;
+            font-size: 3rem;
+            margin: 20px 0;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 60%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            80% { transform: translateY(-5px); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .progress-bar {
+            background: #e9ecef;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(45deg, #4caf50, #8bc34a);
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="detective-badge">🕵️</div>
+            <h1>Keyword Detective</h1>
+            <p>Find the 3 most important words in each sentence!</p>
+        </div>
+        
+        <div class="score-board">
+            <div class="score-item">
+                <div>Score</div>
+                <div class="score-number" id="score">0</div>
+            </div>
+            <div class="score-item">
+                <div>Level</div>
+                <div class="score-number" id="level">1</div>
+            </div>
+            <div class="score-item">
+                <div>Streak</div>
+                <div class="score-number" id="streak">0</div>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        
+        <div class="game-area">
+            <div class="instructions">
+                <strong>🎯 Your Mission:</strong> Click on the 3 most important words that tell the main idea of the sentence. Look for words that answer WHO, WHAT, WHERE, WHEN, or HOW!
+            </div>
+            
+            <div class="sentence-display">
+                <div class="sentence-text" id="sentenceText"></div>
+            </div>
+            
+            <div class="selected-keywords">
+                <h3>🔍 Your Keywords (Pick 3)</h3>
+                <div class="keyword-slots">
+                    <div class="keyword-slot" id="slot1">Slot 1</div>
+                    <div class="keyword-slot" id="slot2">Slot 2</div>
+                    <div class="keyword-slot" id="slot3">Slot 3</div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-clear" onclick="clearSelection()">🔄 Clear</button>
+                <button class="btn btn-check" onclick="checkAnswer()">✅ Check Answer</button>
+                <button class="btn btn-next" onclick="nextSentence()" style="display: none;" id="nextBtn">➡️ Next Sentence</button>
+            </div>
+            
+            <div id="feedback" class="feedback" style="display: none;"></div>
+            <div id="celebration" class="celebration" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const sentences = [
+            {
+                text: "The happy dog ran quickly through the green park.",
+                keywords: ["dog", "ran", "park"],
+                explanation: "Great! 'Dog' tells WHO, 'ran' tells WHAT happened, and 'park' tells WHERE!"
+            },
+            {
+                text: "My little sister ate three chocolate cookies after dinner.",
+                keywords: ["sister", "ate", "cookies"],
+                explanation: "Perfect! 'Sister' is WHO, 'ate' is WHAT she did, and 'cookies' is WHAT she ate!"
+            },
+            {
+                text: "The red fire truck raced down the busy street.",
+                keywords: ["truck", "raced", "street"],
+                explanation: "Excellent! 'Truck' tells WHO/WHAT, 'raced' tells HOW it moved, and 'street' tells WHERE!"
+            },
+            {
+                text: "Ten colorful balloons floated high above the birthday party.",
+                keywords: ["balloons", "floated", "party"],
+                explanation: "Amazing! 'Balloons' tells WHAT, 'floated' tells WHAT they did, and 'party' tells WHERE!"
+            },
+            {
+                text: "The brave knight fought the scary dragon near the castle.",
+                keywords: ["knight", "fought", "dragon"],
+                explanation: "Fantastic! 'Knight' is WHO, 'fought' is WHAT he did, and 'dragon' is WHO he fought!"
+            },
+            {
+                text: "Mom baked fresh cookies in the warm kitchen yesterday.",
+                keywords: ["Mom", "baked", "cookies"],
+                explanation: "Super! 'Mom' tells WHO, 'baked' tells WHAT she did, and 'cookies' tells WHAT she made!"
+            },
+            {
+                text: "The yellow school bus stopped at every house on our street.",
+                keywords: ["bus", "stopped", "house"],
+                explanation: "Great work! 'Bus' tells WHAT, 'stopped' tells WHAT it did, and 'house' tells WHERE!"
+            },
+            {
+                text: "Five hungry birds sang beautiful songs in the tall tree.",
+                keywords: ["birds", "sang", "tree"],
+                explanation: "Perfect! 'Birds' tells WHO, 'sang' tells WHAT they did, and 'tree' tells WHERE!"
+            }
+        ];
+
+        let currentSentence = 0;
+        let selectedWords = [];
+        let score = 0;
+        let streak = 0;
+        let level = 1;
+
+        function displaySentence() {
+            const sentence = sentences[currentSentence];
+            const words = sentence.text.split(' ');
+            const sentenceContainer = document.getElementById('sentenceText');
+            
+            sentenceContainer.innerHTML = '';
+            words.forEach((word, index) => {
+                const cleanWord = word.replace(/[.,!?]/g, '');
+                const punctuation = word.match(/[.,!?]/g) ? word.match(/[.,!?]/g)[0] : '';
+                
+                const wordSpan = document.createElement('span');
+                wordSpan.className = 'word';
+                wordSpan.textContent = cleanWord;
+                wordSpan.onclick = () => selectWord(cleanWord, wordSpan);
+                
+                sentenceContainer.appendChild(wordSpan);
+                
+                if (punctuation) {
+                    const punctSpan = document.createElement('span');
+                    punctSpan.textContent = punctuation + ' ';
+                    sentenceContainer.appendChild(punctSpan);
+                } else if (index < words.length - 1) {
+                    sentenceContainer.appendChild(document.createTextNode(' '));
+                }
+            });
+            
+            updateProgress();
+        }
+
+        function selectWord(word, element) {
+            if (selectedWords.length >= 3 && !selectedWords.includes(word)) {
+                showFeedback("You can only select 3 keywords! Clear your selection to choose different words.", "error");
+                return;
+            }
+            
+            if (selectedWords.includes(word)) {
+                // Deselect word
+                selectedWords = selectedWords.filter(w => w !== word);
+                element.classList.remove('selected');
+            } else if (selectedWords.length < 3) {
+                // Select word
+                selectedWords.push(word);
+                element.classList.add('selected');
+            }
+            
+            updateKeywordSlots();
+        }
+
+        function updateKeywordSlots() {
+            for (let i = 1; i <= 3; i++) {
+                const slot = document.getElementById(`slot${i}`);
+                if (selectedWords[i-1]) {
+                    slot.textContent = selectedWords[i-1];
+                    slot.classList.add('filled');
+                } else {
+                    slot.textContent = `Slot ${i}`;
+                    slot.classList.remove('filled');
+                }
+            }
+        }
+
+        function clearSelection() {
+            selectedWords = [];
+            document.querySelectorAll('.word').forEach(word => {
+                word.classList.remove('selected', 'correct', 'incorrect');
+            });
+            updateKeywordSlots();
+            hideFeedback();
+        }
+
+        function checkAnswer() {
+            if (selectedWords.length !== 3) {
+                showFeedback("Please select exactly 3 keywords before checking your answer!", "error");
+                return;
+            }
+            
+            const correctKeywords = sentences[currentSentence].keywords;
+            const isCorrect = selectedWords.every(word => 
+                correctKeywords.some(correct => correct.toLowerCase() === word.toLowerCase())
+            ) && selectedWords.length === 3;
+            
+            // Color the words
+            document.querySelectorAll('.word').forEach(wordElement => {
+                const word = wordElement.textContent;
+                if (selectedWords.includes(word)) {
+                    if (correctKeywords.some(correct => correct.toLowerCase() === word.toLowerCase())) {
+                        wordElement.classList.add('correct');
+                        wordElement.classList.remove('incorrect');
+                    } else {
+                        wordElement.classList.add('incorrect');
+                        wordElement.classList.remove('correct');
+                    }
+                }
+            });
+            
+            if (isCorrect) {
+                score += 100 + (streak * 10);
+                streak++;
+                showFeedback(sentences[currentSentence].explanation + " 🎉", "success");
+                showCelebration();
+                document.getElementById('nextBtn').style.display = 'inline-block';
+                
+                if (streak > 0 && streak % 3 === 0) {
+                    level++;
+                    showFeedback(`🎊 Level Up! You're now a Level ${level} Keyword Detective! 🎊`, "success");
+                }
+            } else {
+                streak = 0;
+                const correctWords = correctKeywords.join(', ');
+                showFeedback(`Not quite right! The key words were: ${correctWords}. Try to think about WHO, WHAT, WHERE, WHEN, or HOW! 🤔`, "error");
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            }
+            
+            updateScoreBoard();
+        }
+
+        function nextSentence() {
+            currentSentence = (currentSentence + 1) % sentences.length;
+            clearSelection();
+            displaySentence();
+            document.getElementById('nextBtn').style.display = 'none';
+            hideFeedback();
+            document.getElementById('celebration').style.display = 'none';
+        }
+
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback ${type}`;
+            feedback.style.display = 'block';
+        }
+
+        function hideFeedback() {
+            document.getElementById('feedback').style.display = 'none';
+        }
+
+        function showCelebration() {
+            const celebrations = ['🎉', '⭐', '🏆', '🎊', '✨', '🌟'];
+            const celebration = document.getElementById('celebration');
+            celebration.textContent = celebrations[Math.floor(Math.random() * celebrations.length)];
+            celebration.style.display = 'block';
+        }
+
+        function updateScoreBoard() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('level').textContent = level;
+            document.getElementById('streak').textContent = streak;
+        }
+
+        function updateProgress() {
+            const progress = ((currentSentence + 1) / sentences.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        // Initialize the game
+        displaySentence();
+        updateScoreBoard();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97f9e37586cd41c4',t:'MTc1Nzk1NzgwOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
